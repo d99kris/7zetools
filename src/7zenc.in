@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# 7zenc
+#
+# Copyright (c) 2015, Kristofer Berggren
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the author nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Package details ####################################################
+URL=""
+PKGNAME=""
+VERSION=""
+PROGNAME="7zenc"
+AUTHOR="Kristofer Berggren"
+
+# Pre-requisites checking ############################################
+which 7z &> /dev/null
+if [ "${?}" != "0" ]; then
+  echo "Required tool 7z not found."
+  exit 1
+fi
+
+# Globals ############################################################
+TMPDIR="/run/shm"
+USERTMPDIR="${TMPDIR}/7z-`whoami`"
+USERPASSFILE="${USERTMPDIR}/password"
+
+# Application info ###################################################
+showusage()
+{
+  echo "${PROGNAME} encrypts one specified file or directory (recursively),"
+  echo "using the encryption key set up using 7zpass. No compression is used,"
+  echo "so the resulting 7z archive size will be similar to original file(s)."
+  echo "The resulting file will be named same as source file/directory with"
+  echo "previous suffix removed and .7z added. It will be stored in current"
+  echo "directory."
+  echo ""
+  echo "Usage: ${PROGNAME} OPTION"
+  echo "   or: ${PROGNAME} PATH"
+  echo ""
+  echo "Options:"
+  echo "   --help        display this help and exit"
+  echo "   --version     output version information and exit"
+  echo "   PATH          file or directory to encrypt"
+  echo ""
+  echo "Examples:"
+  echo "   ${PROGNAME} a.txt   creates a new encrypted 7z archive named a.7z"
+  echo "                 in current directory and adds a copy of a.txt to it."
+  echo ""
+  echo "Report bugs at ${URL}"
+  echo ""
+}
+
+showversion()
+{
+  echo "${PROGNAME} v${VERSION}"
+  echo ""
+  echo "Copyright (C) 2015 ${AUTHOR}"
+  echo ""
+  echo "${PROGNAME} is part of 7zetools and distributed"
+  echo "under BSD 3-Clause license."
+  echo ""
+  echo "Written by ${AUTHOR}"
+}
+
+# Usage checking #####################################################
+if [ "${1}" == "--help" ] ; then
+  showusage
+  exit 0
+elif [ "${1}" == "--version" ] ; then
+  showversion
+  exit 0
+elif [ "${#}" != "1" ] ; then
+  showusage
+  exit 1
+else
+  ORGPATH="${1}"
+fi
+
+# Password checking ##################################################
+if [ -f "${USERPASSFILE}" ]; then
+  KEY1="`cat ${USERPASSFILE}`"
+fi
+if [ "${KEY1}" == "" ]; then
+  echo "Password is not set, please run 7zpass to set password"
+  exit 1
+fi
+
+# Target file checking ###############################################
+ORGNAME="`basename ${ORGPATH}`"
+ENCNAME="${ORGNAME%.*}.7z"
+if [ -f "${ENCNAME}" ]; then
+  echo "Error:"
+  echo "Target file ${ENCNAME} already exists"
+  exit 1
+fi
+
+# Encrypt specified file(s) ##########################################
+if [ -f "${ORGPATH}" ]; then
+  7z a -mhe=on -mx0 -p${KEY1} ${ENCNAME} ${ORGPATH}
+else
+  if [ -d "${ORGPATH}" ]; then
+    CURDIR="`pwd`"
+    cd ${ORGPATH}
+    FULLORGPATH="`pwd`"
+    ORGDIR="`basename ${FULLORGPATH}`"
+    cd ..
+    7z a -mhe=on -mx0 -p${KEY1} ${CURDIR}/${ENCNAME} ${ORGDIR}
+    cd ${CURDIR}
+  else
+    echo "Error:"
+    echo "Source path ${ORGPATH} is neither a file nor a directory"
+    exit 1
+  fi
+fi
+
+# Exit ###############################################################
+exit 0
+

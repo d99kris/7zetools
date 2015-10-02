@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# 7zpass
+#
+# Copyright (c) 2015, Kristofer Berggren
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the author nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Package details ####################################################
+URL=""
+PKGNAME=""
+VERSION=""
+PROGNAME="7zpass"
+AUTHOR="Kristofer Berggren"
+
+# Pre-requisites checking ############################################
+which 7z &> /dev/null
+if [ "${?}" != "0" ]; then
+  echo "Required tool 7z not found."
+  exit 1
+fi
+
+# Globals ############################################################
+TMPDIR="/run/shm"
+USERTMPDIR="${TMPDIR}/7z-`whoami`"
+USERPASSFILE="${USERTMPDIR}/password"
+
+# Application info ###################################################
+showusage()
+{
+  echo "${PROGNAME} sets (or clears) the current encryption key - or"
+  echo "\"password\" - for the user invoking the command. The encryption key"
+  echo "is stored until next reboot, or until the user sets the empty"
+  echo "encryption key." 
+  echo ""
+  echo "Note: The encryption key is stored in plaintext in"
+  echo "volatile memory (RAM)."
+  echo ""
+  echo "Usage: ${PROGNAME} OPTION"
+  echo "   or: ${PROGNAME}"
+  echo ""
+  echo "Options:"
+  echo "   --help        display this help and exit"
+  echo "   --version     output version information and exit"
+  echo ""
+  echo "Examples:"
+  echo "   ${PROGNAME}"
+  echo "      Prompts the user in interactive mode"
+  echo ""
+  echo "Report bugs at ${URL}"
+  echo ""
+}
+
+showversion()
+{
+  echo "${PROGNAME} v${VERSION}"
+  echo ""
+  echo "Copyright (C) 2015 ${AUTHOR}"
+  echo ""
+  echo "${PROGNAME} is part of 7zetools and distributed"
+  echo "under BSD 3-Clause license."
+  echo ""
+  echo "Written by ${AUTHOR}"
+}
+
+# Usage checking #####################################################
+if [ "${1}" == "--help" ] ; then
+  showusage
+  exit 0
+elif [ "${1}" == "--version" ] ; then
+  showversion
+  exit 0
+fi
+
+# Prepare temporary storage ##########################################
+mkdir -p ${USERTMPDIR}
+
+# Retrieve user password and perform validation ######################
+read -s -p "Enter password (will not be echoed) :" KEY1
+echo
+read -s -p "Verify password (will not be echoed) :" KEY2
+echo
+
+if [ "${KEY1}" != "${KEY2}" ]; then
+  echo "Error:"
+  echo "password verification failed"
+  exit 1
+fi
+
+# Store password in temporary file ###################################
+rm ${USERPASSFILE} 2> /dev/null
+if [ "${KEY1}" != "" ]; then
+  touch ${USERPASSFILE}
+  chmod go-rwx ${USERPASSFILE}
+  echo ${KEY1} >> ${USERPASSFILE}
+fi
+
+# Feedback result to user ############################################
+if [ "${KEY1}" == "" ]; then
+  echo "Password succesfully cleared"
+else
+  echo "Password succesfully stored"
+fi
+
+# Exit ###############################################################
+exit 0
+

@@ -1,0 +1,181 @@
+#!/bin/bash
+
+# 7zcd
+#
+# Copyright (c) 2015, Kristofer Berggren
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the author nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Package details ####################################################
+URL=""
+PKGNAME=""
+VERSION=""
+PROGNAME="7zcd"
+AUTHOR="Kristofer Berggren"
+
+# Pre-requisites checking ############################################
+which 7z &> /dev/null
+if [ "${?}" != "0" ]; then
+  echo "Required tool 7z not found."
+  exit 1
+fi
+which realpath &> /dev/null
+if [ "${?}" != "0" ]; then
+  echo "Required tool realpath not found."
+  exit 1
+fi
+
+# Globals ############################################################
+TMPDIR="/run/shm"
+USERTMPDIR="${TMPDIR}/7z-`whoami`"
+USERTMPDATADIR=""
+USERPASSFILE="${USERTMPDIR}/password"
+OIFS=${IFS}
+IFS=$'\n'
+
+# Application info ###################################################
+showusage()
+{
+  echo "${PROGNAME} decrypts specified 7z archive to volatile memory (RAM)"
+  echo "and changes current directory to the temporary directory holding the"
+  echo "decrypted files. It then spawns a new bash shell instance, allowing"
+  echo "the user to use the shell to make any modifications to the "
+  echo "files/directories contained in the archive. When user exits the shell,"
+  echo "7zcd encrypts all files and overwrites the original 7z archive."
+  echo ""
+  echo "Usage: ${PROGNAME} OPTION"
+  echo "   or: ${PROGNAME} PATH"
+  echo ""
+  echo "Options:"
+  echo "   --help        display this help and exit"
+  echo "   --version     output version information and exit"
+  echo "   PATH          7z archive file"
+  echo ""
+  echo "Examples:"
+  echo "   ${PROGNAME} a.7z     decrypts specified 7z archive to a"
+  echo "                 temporary directory, and cd's into it."
+  echo ""
+  echo "Report bugs at ${URL}"
+  echo ""
+}
+
+showversion()
+{
+  echo "${PROGNAME} v${VERSION}"
+  echo ""
+  echo "Copyright (C) 2015 ${AUTHOR}"
+  echo ""
+  echo "${PROGNAME} is part of 7zetools and distributed"
+  echo "under BSD 3-Clause license."
+  echo ""
+  echo "Written by ${AUTHOR}"
+}
+
+# Usage checking #####################################################
+if [ "${1}" == "--help" ] ; then
+  showusage
+  exit 0
+elif [ "${1}" == "--version" ] ; then
+  showversion
+  exit 0
+elif [ "${#}" == "1" ] ; then
+  ENCNAME="${1}"
+fi
+if [ ! -f "${ENCNAME}" ]; then
+  showusage
+  exit 1
+fi
+ENCPATH="`realpath ${ENCNAME}`"
+ENCID="`echo ${ENCPATH} | sha1sum | cut -f1 -d' '`"
+
+# Password checking ##################################################
+if [ -f "${USERPASSFILE}" ]; then
+  KEY1="`cat ${USERPASSFILE}`"
+fi
+if [ "${KEY1}" == "" ]; then
+  echo "Password is not set, please run 7zpass to set password"
+  exit 1
+fi
+
+# Determine which temporary storage to use ###########################
+ENCSIZE="`ls -s --block-size=1024 ${ENCPATH} | cut -d' ' -f1`"
+TMPSPACE="`df -k ${TMPDIR} | awk '/[0-9]%/{print $(NF-2)}'`"
+if [ "${ENCSIZE}" -lt "${TMPSPACE}" ]; then
+  echo "Using ${TMPDIR} for temporary storage"
+  USERTMPDATADIR="${USERTMPDIR}/${ENCID}"
+else
+  SECTMPDIR="/tmp"
+  SECUSERTMPDIR="${SECTMPDIR}/7z-`whoami`"
+  SECTMPSPACE="`df -k ${SECTMPDIR} | awk '/[0-9]%/{print $(NF-2)}'`"
+  if [ "${ENCSIZE}" -lt "${SECTMPSPACE}" ]; then
+    echo "Primary temporary directory ${TMPDIR} does not"
+    echo "have enough free space. Proceed to use secondary"
+    read -p "temporary directory ${SECTMPDIR} [y/N]? "
+    echo ""
+    if [ "$REPLY" = "y"  ] ; then
+      echo "Using ${SECTMPDIR} for temporary storage"
+      USERTMPDATADIR="${SECUSERTMPDIR}/${ENCID}"
+    else
+      echo "User abort"
+      exit 1
+    fi
+  else
+    echo "Free temporary storage insufficient, use 7zdec"
+    exit 1
+  fi
+fi
+
+# Decrypt specified file #############################################
+rm -rf ${USERTMPDATADIR} 2> /dev/null
+mkdir -p ${USERTMPDATADIR}
+cd ${USERTMPDATADIR}
+7z x -p${KEY1} ${ENCPATH}
+if [ "${?}" != "0" ]; then
+  echo "Decryption failed"
+  exit 1
+fi
+
+# Show application to open with ######################################
+echo "Program:    bash"
+echo ""
+
+# Start sub shell ####################################################
+echo "================ SPECIAL SHELL SPAWNED ================"
+bash
+echo "================ SPECIAL SHELL EXITED ================="
+
+# Recompress all files ###############################################
+echo ""
+echo "Updating ${ENCPATH}, do not stop this program"
+rm -rf ${ENCPATH}
+7z a -mhe=on -mx0 -p${KEY1} ${ENCPATH} *
+echo ""
+
+# Delete temporary files #############################################
+rm -rf ${USERTMPDATADIR}
+IFS=${OIFS}
+
+# Exit ###############################################################
+exit 0
+
