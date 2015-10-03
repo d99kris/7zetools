@@ -36,11 +36,11 @@ Usage
 user invoking the command. The encryption key is stored until next reboot, or
 until the user sets the empty encryption key.
 
-Example setting encryption key __secret__:
+Example setting encryption key __5ecret__:
 
     $ 7zpass
-    Enter password (will not be echoed) : __secret__ <ENTER>
-    Verify password (will not be echoed) : __secret__ <ENTER>
+    Enter password (will not be echoed) : 5ecret <ENTER>
+    Verify password (will not be echoed) : 5ecret <ENTER>
     Password succesfully stored
 
 Example clearing encryption key:
@@ -54,7 +54,7 @@ Note: The encryption key is stored in plaintext on volatile memory (RAM).
 
 7zenc
 -----
-7zenc encrypts one specified file or one specified directory, using the
+7zenc encrypts one specified file or directory (recursively), using the
 encryption key set up using 7zpass. No compression is used, so the resulting
 7z archive size will be similar to original file(s). The resulting file will be
 named same as source file/directory with previous suffix removed and .7z added.
@@ -75,7 +75,7 @@ Usage:
 
 7zopen
 ------
-7zopen decrypts specified .7z archive to volatile memory (RAM) and open the
+7zopen decrypts specified .7z archive to volatile memory (RAM) and opens the
 files using systems default viewer/editor (or as manually specified by user). 
 After the viewer/editor program has been closed, 7zopen updates any files in the
 .7z archive that were modified.
@@ -87,6 +87,16 @@ Usage:
 Note: This utility only makes sense to use when operating on .7z archives with
 single file, or multiple files of same filetype (thus same editor/viewer can
 be used).
+
+7zopen may be user-configured to utilize a specific program for a certain
+filetype. The configuration file shall be stored in $HOME/.7zetoolsrc and can 
+specify a program for each mime-type. For example in order to use nano for all
+files with mime-type text/plain add a line:
+
+    TEXTPLAINPROG=nano
+
+You may use 7zopen to determine mime-type in a 7z archive, as it outputs this 
+information in the console upon opening the archive.
 
 7zcd
 ----
@@ -103,8 +113,9 @@ Usage:
 Design Notes
 ============
 Ease of use for single (or few) files encryption for use with cloud storage, 
-such as Dropbox, has been driving most design decisions. As such these tools
-are not optimized for maximum security.
+such as Dropbox, has been driving most design decisions. As such 7zetools
+provides streamlined operation, but requires the user to understand the
+security implications.
 
 License
 =======
