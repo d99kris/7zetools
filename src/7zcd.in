@@ -47,7 +47,7 @@ if [ "${?}" != "0" ]; then
 fi
 
 # Globals ############################################################
-TMPDIR="/run/shm"
+TMPDIR="/dev/shm"
 USERTMPDIR="${TMPDIR}/7z-`whoami`"
 USERTMPDATADIR=""
 USERPASSFILE="${USERTMPDIR}/password"
