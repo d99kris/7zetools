@@ -95,6 +95,12 @@ fi
 
 # Prepare temporary storage ##########################################
 mkdir -p ${USERTMPDIR}
+if [ "${?}" != "0" ]; then
+  echo "Cannot create ${USERTMPDIR}"
+  exit 1
+else
+  chmod go-rwx ${USERTMPDIR}
+fi
 
 # Retrieve user password and perform validation ######################
 read -s -p "Enter password (will not be echoed) :" KEY1
