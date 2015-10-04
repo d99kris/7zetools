@@ -1,4 +1,4 @@
-AC_INIT([7zetools], [0.1], [kristofer.berggren@gmail.com], [], 
+AC_INIT([7zetools], [1.0], [kristofer.berggren@gmail.com], [], 
         [https://github.com/d99kris/7zetools])
 AM_INIT_AUTOMAKE([foreign])
 AC_CHECK_PROG([SEVENZIP], [7z], [7z])
