@@ -14,12 +14,15 @@ It has been tested on:
 Installation
 ============
 
-Ubuntu / Debian - Installing Dependencies
---------------------------------
+Dependencies
+------------
+
+Ubuntu / Debian
+
     sudo apt-get install p7zip-full realpath help2man
 
-openSUSE - Installing Dependencies
---------------------------------
+openSUSE
+
     sudo zypper install p7zip coreutils help2man
 
 Configure and Build
