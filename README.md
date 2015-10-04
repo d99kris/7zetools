@@ -10,6 +10,7 @@ Supported Platforms
 
 It has been tested on:
 - Ubuntu 14.04
+- openSUSE 13.2
 
 Installation
 ============
@@ -17,7 +18,7 @@ Installation
 Dependencies
 ------------
 
-Ubuntu / Debian
+Ubuntu
 
     sudo apt-get install p7zip-full realpath help2man
 
