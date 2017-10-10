@@ -10,7 +10,7 @@ os:
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       sudo apt update;
-      sudo apt -y install p7zip-full realpath
+      sudo apt -y install p7zip-full realpath;
     fi
 
 script:
