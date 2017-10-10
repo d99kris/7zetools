@@ -5,7 +5,7 @@ TMPDIR=$(mktemp -d)
 
 # Reference
 cat << EOF > ${TMPDIR}/ref.txt
-Mime-type:  text/plain
+Password succesfully stored
 Program:    cat
 Test Message
 
