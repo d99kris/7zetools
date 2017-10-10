@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Environment
+TMPDIR=$(mktemp -d)
+
+# Reference
+cat << EOF > ${TMPDIR}/ref.txt
+Password succesfully stored
+Diff result: 0
+Password succesfully cleared
+EOF
+
+# Test
+ORGPWD="$(pwd)"
+./7zpass --unsafe secret            &>> ${TMPDIR}/test.txt
+cd ${TMPDIR}                        &>> ${TMPDIR}/test.txt
+${ORGPWD}/7zenc ${ORGPWD}/test003   > /dev/null 2>> ${TMPDIR}/test.txt
+${ORGPWD}/7zdec ./test003.7z        > /dev/null 2>> ${TMPDIR}/test.txt
+diff ${ORGPWD}/test003 ./test003    &>> ${TMPDIR}/test.txt
+echo "Diff result: ${?}"            &>> ${TMPDIR}/test.txt
+cd -                                > /dev/null
+./7zpass --unsafe                   &>> ${TMPDIR}/test.txt
+
+# Compare
+diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt
+RV="${?}"
+
+# Cleanup
+rm -rf ${TMPDIR}
+
+# Exit
+exit ${RV}

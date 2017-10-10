@@ -28,9 +28,9 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Package details ####################################################
-URL=""
-PKGNAME=""
-VERSION=""
+URL="https://github.com/d99kris/7zetools"
+PKGNAME="7zetools"
+VERSION="1.0"
 PROGNAME="7zenc"
 AUTHOR="Kristofer Berggren"
 

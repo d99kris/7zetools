@@ -1,15 +1,20 @@
 7zetools
 ========
+
+| **Linux** |
+|-----------|
+| [![Build status](https://travis-ci.org/d99kris/7zetools.svg?branch=master)](https://travis-ci.org/d99kris/7zetools) |
+
 7zetools - 7-Zip Encryption Tools - is a set of Linux shell scripts to 
 facilitate single file (or directory) encryption using 7-Zip AES-256.
 
 Supported Platforms
 ===================
 7zetools should work on most Linux systems where its dependencies are met; 
-7z, realpath and help2man.
+7z and realpath.
 
 It has been tested on:
-- Ubuntu 14.04
+- Ubuntu 14.04, Ubuntu 16.04
 - openSUSE 13.2
 
 Installation
@@ -20,15 +25,15 @@ Dependencies
 
 Ubuntu
 
-    sudo apt-get install p7zip-full realpath help2man
+    sudo apt-get install p7zip-full realpath
 
 openSUSE
 
-    sudo zypper install p7zip coreutils help2man
+    sudo zypper install p7zip coreutils
 
 Configure and Build
 -------------------
-    ./configure && make
+    mkdir -p build && cd build && cmake .. && make -s
 
 Optionally Install
 ------------------

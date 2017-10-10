@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Environment
+TMPDIR=$(mktemp -d)
+
+# Reference
+cat << EOF > ${TMPDIR}/ref.txt
+Password succesfully stored
+================ SPECIAL SHELL SPAWNED ================
+a
+b
+c
+================ SPECIAL SHELL EXITED =================
+Password succesfully cleared
+EOF
+
+# Test
+ORGPWD="$(pwd)"
+./7zpass --unsafe secret                  &>> ${TMPDIR}/test.txt
+cd ${TMPDIR}                              &>> ${TMPDIR}/test.txt
+mkdir test                                &>> ${TMPDIR}/test.txt
+touch test/a test/b test/c                &>> ${TMPDIR}/test.txt
+${ORGPWD}/7zenc test                      > /dev/null 2>> ${TMPDIR}/test.txt
+rm -rf test                               &>> ${TMPDIR}/test.txt
+printf "ls -1 test\nexit\n" | ${ORGPWD}/7zcd ./test.7z > out.txt
+grep -A4 'SPECIAL SHELL SPAWNED' out.txt  &>> ${TMPDIR}/test.txt
+cd -                                      > /dev/null
+./7zpass --unsafe                         &>> ${TMPDIR}/test.txt
+
+# Compare
+diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt
+RV="${?}"
+
+# Cleanup
+rm -rf ${TMPDIR}
+
+# Exit
+exit ${RV}

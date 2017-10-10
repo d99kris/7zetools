@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 7zcd
+# 7zopen
 #
 # Copyright (c) 2015, Kristofer Berggren
 # All rights reserved.
@@ -28,10 +28,10 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Package details ####################################################
-URL=""
-PKGNAME=""
-VERSION=""
-PROGNAME="7zcd"
+URL="https://github.com/d99kris/7zetools"
+PKGNAME="7zetools"
+VERSION="1.0"
+PROGNAME="7zopen"
 AUTHOR="Kristofer Berggren"
 
 # Pre-requisites checking ############################################
@@ -51,30 +51,58 @@ TMPDIR="/dev/shm"
 USERTMPDIR="${TMPDIR}/7z-`whoami`"
 USERTMPDATADIR=""
 USERPASSFILE="${USERTMPDIR}/password"
+USERCFGFILE="${HOME}/.7zetoolsrc"
 OIFS=${IFS}
 IFS=$'\n'
+
+# Read configuration settings ########################################
+typeset -A PROG
+if [[ -r "${USERCFGFILE}" && -f "${USERCFGFILE}" ]]; then
+  while read LINE
+  do
+    if [[ ${LINE} == *"="* ]]; then
+      VAR=$(echo "${LINE}" | cut -d '=' -f 1)
+      VAL=$(echo "${LINE}" | cut -d '=' -f 2-)
+      PROG[${VAR}]=$(eval echo "${VAL}")
+    fi
+  done < ${USERCFGFILE}
+fi
 
 # Application info ###################################################
 showusage()
 {
   echo "${PROGNAME} decrypts specified 7z archive to volatile memory (RAM)"
-  echo "and changes current directory to the temporary directory holding the"
-  echo "decrypted files. It then spawns a new bash shell instance, allowing"
-  echo "the user to use the shell to make any modifications to the "
-  echo "files/directories contained in the archive. When user exits the shell,"
-  echo "7zcd encrypts all files and overwrites the original 7z archive."
+  echo "and opens the files using systems default viewer/editor (or as "
+  echo "manually specified by user). After the viewer/editor program has been"
+  echo "closed, 7zopen updates any files in the 7z archive that were modified."
+  echo ""
+  echo "Note: This utility only makes sense to use when operating on 7z "
+  echo "archives with single file, or multiple files of same filetype (thus"
+  echo "the same editor/viewer can be used)."
+  echo ""
+  echo "${PROGNAME} may be user-configured to utilize a specific program for"
+  echo "a certain filetype. The configuration file shall be stored in"
+  echo "\$HOME/.7zetoolsrc and can specify a program for each mime-type. For"
+  echo "example in order to use nano for all files with mime-type text/plain"
+  echo "add a line:"
+  echo "   TEXTPLAINPROG=nano"
+  echo ""
+  echo "You may use ${PROGNAME} to determine mime-type in a 7z archive, as it"
+  echo "outputs this information in the console upon opening the archive."
   echo ""
   echo "Usage: ${PROGNAME} OPTION"
-  echo "   or: ${PROGNAME} PATH"
+  echo "   or: ${PROGNAME} [PROG] PATH"
   echo ""
   echo "Options:"
   echo "   --help        display this help and exit"
   echo "   --version     output version information and exit"
+  echo "   [PROG]        optionally specified viewer/editor program"
   echo "   PATH          7z archive file"
   echo ""
   echo "Examples:"
-  echo "   ${PROGNAME} a.7z     decrypts specified 7z archive to a"
-  echo "                 temporary directory, and cd's into it."
+  echo "   ${PROGNAME} nano a.7z    decrypts specified 7z archive"
+  echo "                       and opens the file(s) in the archive"
+  echo "                       with text editor nano"
   echo ""
   echo "Report bugs at ${URL}"
   echo ""
@@ -99,12 +127,27 @@ if [ "${1}" == "--help" ] ; then
 elif [ "${1}" == "--version" ] ; then
   showversion
   exit 0
-elif [ "${#}" == "1" ] ; then
+fi
+if [ "${#}" == "1" ] ; then
+  DEFPROG=""
   ENCNAME="${1}"
+else
+  if [ "${#}" == "2" ] ; then
+    DEFPROG="${1}"
+    ENCNAME="${2}"
+  fi
 fi
 if [ ! -f "${ENCNAME}" ]; then
   showusage
   exit 1
+fi
+if [ "${DEFPROG}" != "" ]; then
+  which ${DEFPROG} &> /dev/null
+  if [ "${?}" != "0" ]; then
+    showusage
+    echo "${DEFPROG} cannot be found"
+    exit 1
+  fi
 fi
 ENCPATH="`realpath ${ENCNAME}`"
 ENCID="`echo ${ENCPATH} | sha1sum | cut -f1 -d' '`"
@@ -147,7 +190,6 @@ else
 fi
 
 # Decrypt specified file #############################################
-rm -rf ${USERTMPDATADIR} 2> /dev/null
 mkdir -p ${USERTMPDATADIR}
 cd ${USERTMPDATADIR}
 7z x -p${KEY1} ${ENCPATH}
@@ -156,20 +198,47 @@ if [ "${?}" != "0" ]; then
   exit 1
 fi
 
-# Show application to open with ######################################
-echo "Program:    bash"
-echo ""
+# Determine application to open with #################################
+FIRSTFILE="`find . -type f | head -1`"
+MIME="`file --mime-type -b ${FIRSTFILE}`"
+CUSTPROG="`echo $MIME | sed 's/\///g' | awk '{print toupper($0)}'`PROG"
+echo "Mime-type:  ${MIME}"
 
-# Start sub shell ####################################################
-echo "================ SPECIAL SHELL SPAWNED ================"
-bash
-echo "================ SPECIAL SHELL EXITED ================="
+if [ "${DEFPROG}" == "" ]; then
+  # If not manually specified at cmd line, check if custom program set
+  DEFPROG=${PROG[${CUSTPROG}]}
 
-# Recompress all files ###############################################
+  if [ "${DEFPROG}" == "" ]; then
+    # If no custom program set, use system default
+    DEFAPP="`xdg-mime query default ${MIME}`"
+    DEFPROG="`echo ${DEFAPP} | cut -f1 -d.`"
+  fi
+fi
+which ${DEFPROG} > /dev/null
+if [ "${?}" != "0" ]; then
+  echo "${DEFPROG} cannot be found"
+  rm -rf ${USERTMPDATADIR}
+  exit 1
+else
+  echo "Program:    ${DEFPROG}"
+fi
+
+# Calculate checksum before open #####################################
+ALLFILES=($(find . -type f | cut -c3-1024))
+ORGCHKSUM=`cat ${ALLFILES[@]} | sha1sum -b | cut -f1 -d' '`
+
+# Open decrypted files ###############################################
+${DEFPROG} ${ALLFILES[@]}
+
+# Recompress opened files if modified ################################
 echo ""
-echo "Updating ${ENCPATH}, do not stop this program"
-rm -rf ${ENCPATH}
-7z a -mhe=on -mx0 -p${KEY1} ${ENCPATH} *
+NEWCHKSUM=`cat ${ALLFILES[@]} | sha1sum -b | cut -f1 -d' '`
+if [ "${ORGCHKSUM}" != "${NEWCHKSUM}" ]; then
+  echo "Updating ${ENCPATH}, do not stop this program"
+  7z u -mhe=on -mx0 -p${KEY1} ${ENCPATH} ${ALLFILES[@]}
+else
+  echo "Closing file without updating archive"
+fi
 echo ""
 
 # Delete temporary files #############################################

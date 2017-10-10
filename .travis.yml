@@ -1,0 +1,22 @@
+language:
+  - c
+
+sudo:
+  - required
+
+os:
+  - linux
+
+install:
+  - if [ $TRAVIS_OS_NAME = linux ]; then
+      sudo apt update;
+      sudo apt -y install p7zip-full realpath
+    fi
+
+script:
+  - mkdir -p build
+  - cd build
+  - cmake ..
+  - make
+  - ctest --output-on-failure
+

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Environment
+TMPDIR=$(mktemp -d)
+
+# Reference
+cat << EOF > ${TMPDIR}/ref.txt
+Password succesfully stored
+Size:       13
+Compressed: 198
+Mime-type:  text/plain
+Program:    cat
+Test Message
+
+Closing file without updating archive
+
+Password succesfully cleared
+EOF
+
+# Test
+ORGPWD="$(pwd)"
+./7zpass --unsafe secret            &>> ${TMPDIR}/test.txt
+cd ${TMPDIR}                        &>> ${TMPDIR}/test.txt
+echo "Test Message" > plain.txt
+${ORGPWD}/7zenc plain.txt           > /dev/null 2>> ${TMPDIR}/test.txt
+rm plain.txt                        &>> ${TMPDIR}/test.txt
+${ORGPWD}/7zopen cat ./plain.7z     > out.txt 2>> ${TMPDIR}/test.txt
+tail -8 out.txt                     &>> ${TMPDIR}/test.txt
+cd -                                > /dev/null
+./7zpass --unsafe                   &>> ${TMPDIR}/test.txt
+
+# Compare
+diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt
+RV="${?}"
+
+# Cleanup
+rm -rf ${TMPDIR}
+
+# Exit
+exit ${RV}

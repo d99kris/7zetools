@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Environment
+TMPDIR=$(mktemp -d)
+
+# Reference
+cat << EOF > ${TMPDIR}/ref.txt
+Password succesfully cleared
+EOF
+
+# Test
+./7zpass --unsafe &> ${TMPDIR}/test.txt
+
+# Compare
+diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt
+RV="${?}"
+
+# Cleanup
+rm -rf ${TMPDIR}
+
+# Exit
+exit ${RV}
