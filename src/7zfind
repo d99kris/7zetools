@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# 7zfind
+#
+# Copyright (c) 2017, Kristofer Berggren
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the author nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Package details ####################################################
+URL="https://github.com/d99kris/7zetools"
+PKGNAME="7zetools"
+VERSION="1.0"
+PROGNAME="7zfind"
+AUTHOR="Kristofer Berggren"
+
+# Pre-requisites checking ############################################
+which 7z &> /dev/null
+if [ "${?}" != "0" ]; then
+  echo "Required tool 7z not found."
+  exit 1
+fi
+
+# Globals ############################################################
+TMPDIR="/dev/shm"
+USERTMPDIR="${TMPDIR}/7z-`whoami`"
+USERPASSFILE="${USERTMPDIR}/password"
+
+# Application info ###################################################
+showusage()
+{
+  echo "${PROGNAME} searches 7z archives in the specified directory, for"
+  echo "filenames containing the search string. Optionally the matching files"
+  echo "are extracted if a destination path is specified."
+  echo ""
+  echo "Usage: ${PROGNAME} OPTION"
+  echo "   or: ${PROGNAME} PATH SEARCHSTRING [DESTPATH]"
+  echo ""
+  echo "Options:"
+  echo "   --help        display this help and exit"
+  echo "   --version     output version information and exit"
+  echo "   PATH          directory with 7z archives to search"
+  echo "   SEARCHSTRING  search string (case insensitive)"
+  echo "   DESTPATH      destination path for extracted filed"
+  echo ""
+  echo "Examples:"
+  echo "   ${PROGNAME} ~/archives diary"
+  echo "                 lists all 7z archive content with filenames"
+  echo "                 containing the string \"diary\"."
+  echo ""
+  echo "Report bugs at ${URL}"
+  echo ""
+}
+
+showversion()
+{
+  echo "${PROGNAME} v${VERSION}"
+  echo ""
+  echo "Copyright (C) 2017 ${AUTHOR}"
+  echo ""
+  echo "${PROGNAME} is part of 7zetools and distributed"
+  echo "under BSD 3-Clause license."
+  echo ""
+  echo "Written by ${AUTHOR}"
+}
+
+# Usage checking #####################################################
+if [ "${1}" == "--help" ] ; then
+  showusage
+  exit 0
+elif [ "${1}" == "--version" ] ; then
+  showversion
+  exit 0
+elif [[ "${#}" < "2" ]] ; then
+  showusage
+  exit 1
+else
+  ARCHPATH="${1}"
+  SEARCHSTR="${2}"
+fi
+
+# Password checking ##################################################
+if [ -f "${USERPASSFILE}" ]; then
+  KEY1="`cat ${USERPASSFILE}`"
+fi
+if [ "${KEY1}" == "" ]; then
+  echo "Password is not set, please run 7zpass to set password"
+  exit 1
+fi
+
+# Search specified file ##############################################
+find ${ARCHPATH} -name *.7z | \
+while read ARCH; do
+  7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR}
+done
+
+# Extract specified file #############################################
+if [[ "${3}" != "" ]] && [[ -d "${3}" ]]; then
+  DSTDIR="${3}"
+  echo ""
+  read -p "Proceed to extract above files to ${DSTDIR} (y/n)? "
+  echo ""
+  if [ "$REPLY" = "y"  ] ; then
+    find ${ARCHPATH} -name *.7z | \
+    while read ARCH; do
+      7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR} | \
+      while read FILE; do
+        7z e -p${KEY1} -o"${DSTDIR}" "${ARCH}" "${FILE}"
+      done
+    done
+  fi
+fi
+
+# Exit ###############################################################
+exit 0
+

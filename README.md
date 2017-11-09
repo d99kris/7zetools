@@ -77,6 +77,16 @@ Usage:
 
     7zenc <file|dir>
 
+7zfind
+------
+7zfind searches 7z archives in the specified directory, for filenames
+containing the search string. Optionally the matching files are
+extracted if a destination path is specified.
+
+Usage:
+
+    7zfind <path> <searchstring> [destdir]
+
 7zdec
 -----
 7zdec decrypts specified .7z archive, using the encryption key set up using

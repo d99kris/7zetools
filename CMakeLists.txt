@@ -12,6 +12,9 @@ install(PROGRAMS src/7zdec DESTINATION bin)
 configure_file(src/7zenc ${CMAKE_CURRENT_BINARY_DIR}/7zenc COPYONLY)
 install(PROGRAMS src/7zenc DESTINATION bin)
 
+configure_file(src/7zfind ${CMAKE_CURRENT_BINARY_DIR}/7zfind COPYONLY)
+install(PROGRAMS src/7zfind DESTINATION bin)
+
 configure_file(src/7zopen ${CMAKE_CURRENT_BINARY_DIR}/7zopen COPYONLY)
 install(PROGRAMS src/7zopen DESTINATION bin)
 
@@ -22,6 +25,7 @@ install(PROGRAMS src/7zpass DESTINATION bin)
 install(FILES src/7zcd.1 DESTINATION share/man/man1)
 install(FILES src/7zdec.1 DESTINATION share/man/man1)
 install(FILES src/7zenc.1 DESTINATION share/man/man1)
+install(FILES src/7zfind.1 DESTINATION share/man/man1)
 install(FILES src/7zopen.1 DESTINATION share/man/man1)
 install(FILES src/7zpass.1 DESTINATION share/man/man1)
 
