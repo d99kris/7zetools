@@ -46,3 +46,8 @@ add_test(test004 "${PROJECT_BINARY_DIR}/test004")
 
 configure_file(tests/test005 ${CMAKE_CURRENT_BINARY_DIR}/test005 COPYONLY)
 add_test(test005 "${PROJECT_BINARY_DIR}/test005")
+
+configure_file(tests/test006 ${CMAKE_CURRENT_BINARY_DIR}/test006 COPYONLY)
+add_test(test006 "${PROJECT_BINARY_DIR}/test006")
+
+set_tests_properties(test001 test002 test003 test004 test005 test006 PROPERTIES RUN_SERIAL TRUE)

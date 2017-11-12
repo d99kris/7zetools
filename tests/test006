@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Environment
+TMPDIR=$(mktemp -d)
+
+# Reference
+cat << EOF > ${TMPDIR}/ref.txt
+Password succesfully stored
+test1/abcdef
+test1/defghi
+test2/abcdef
+Password succesfully cleared
+EOF
+
+# Test
+ORGPWD="$(pwd)"
+./7zpass --unsafe secret            >> ${TMPDIR}/test.txt 2>&1
+cd ${TMPDIR}                        >> ${TMPDIR}/test.txt 2>&1
+mkdir test1                         >> ${TMPDIR}/test.txt 2>&1
+touch test1/abcdef                  >> ${TMPDIR}/test.txt 2>&1
+touch test1/defghi                  >> ${TMPDIR}/test.txt 2>&1
+touch test1/ghijkl                  >> ${TMPDIR}/test.txt 2>&1
+${ORGPWD}/7zenc test1               > /dev/null 2>> ${TMPDIR}/test.txt
+rm -rf test1                        >> ${TMPDIR}/test.txt 2>&1
+mkdir test2                         >> ${TMPDIR}/test.txt 2>&1
+touch test2/abcdef                  >> ${TMPDIR}/test.txt 2>&1
+${ORGPWD}/7zenc test2               > /dev/null 2>> ${TMPDIR}/test.txt
+rm -rf test2                        >> ${TMPDIR}/test.txt 2>&1
+${ORGPWD}/7zfind . def | sort       >> ${TMPDIR}/test.txt 2>&1
+cd -                                > /dev/null
+./7zpass --unsafe                   >> ${TMPDIR}/test.txt 2>&1
+
+# Compare
+diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt
+RV="${?}"
+
+# Cleanup
+rm -rf ${TMPDIR}
+
+# Exit
+exit ${RV}

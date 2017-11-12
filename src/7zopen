@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 7zopen
 #
@@ -45,9 +45,26 @@ if [ "${?}" != "0" ]; then
   echo "Required tool realpath not found."
   exit 1
 fi
+SHASUM=$(which sha1sum shasum | head -1 | grep sha)
+if [ "${?}" != "0" ]; then
+  echo "Required tool sha1sum or shasum not found."
+  exit 1
+fi
+if [ "${BASH_VERSINFO}" -lt 4 ]; then
+  echo "Required bash version (>=4) not found."
+  exit 1
+fi
+TMPDIR="/dev/shm"
+if [[ ! -d "${TMPDIR}" ]]; then
+  if [[ "$(uname)" == "Darwin" ]]; then
+    TMPDIR="/Volumes/7zetools"
+  else
+    echo "Required directory ${TMPDIR} not found, exiting."
+    exit 1
+  fi
+fi
 
 # Globals ############################################################
-TMPDIR="/dev/shm"
 USERTMPDIR="${TMPDIR}/7z-`whoami`"
 USERTMPDATADIR=""
 USERPASSFILE="${USERTMPDIR}/password"
@@ -150,7 +167,7 @@ if [ "${DEFPROG}" != "" ]; then
   fi
 fi
 ENCPATH="`realpath ${ENCNAME}`"
-ENCID="`echo ${ENCPATH} | sha1sum | cut -f1 -d' '`"
+ENCID="`echo ${ENCPATH} | ${SHASUM} | cut -f1 -d' '`"
 
 # Password checking ##################################################
 if [ -f "${USERPASSFILE}" ]; then
@@ -162,7 +179,7 @@ if [ "${KEY1}" == "" ]; then
 fi
 
 # Determine which temporary storage to use ###########################
-ENCSIZE="`ls -s --block-size=1024 ${ENCPATH} | cut -d' ' -f1`"
+ENCSIZE="`BLOCKSIZE=1024 ls -s ${ENCPATH} | cut -d' ' -f1`"
 TMPSPACE="`df -k ${TMPDIR} | awk '/[0-9]%/{print $(NF-2)}'`"
 if [ "${ENCSIZE}" -lt "${TMPSPACE}" ]; then
   echo "Using ${TMPDIR} for temporary storage"
@@ -202,16 +219,22 @@ fi
 FIRSTFILE="`find . -type f | head -1`"
 MIME="`file --mime-type -b ${FIRSTFILE}`"
 CUSTPROG="`echo $MIME | sed 's/\///g' | awk '{print toupper($0)}'`PROG"
+PROGARG=""
 echo "Mime-type:  ${MIME}"
 
 if [ "${DEFPROG}" == "" ]; then
   # If not manually specified at cmd line, check if custom program set
   DEFPROG=${PROG[${CUSTPROG}]}
 
+  # If no custom program set, use system default
   if [ "${DEFPROG}" == "" ]; then
-    # If no custom program set, use system default
-    DEFAPP="`xdg-mime query default ${MIME}`"
-    DEFPROG="`echo ${DEFAPP} | cut -f1 -d.`"
+    if [[ "$(uname)" == "Darwin" ]]; then
+      DEFPROG="open"
+      PROGARG="-Wn"
+    else
+      DEFAPP="`xdg-mime query default ${MIME}`"
+      DEFPROG="`echo ${DEFAPP} | cut -f1 -d.`"
+    fi
   fi
 fi
 which ${DEFPROG} > /dev/null
@@ -225,14 +248,14 @@ fi
 
 # Calculate checksum before open #####################################
 ALLFILES=($(find . -type f | cut -c3-1024))
-ORGCHKSUM=`cat ${ALLFILES[@]} | sha1sum -b | cut -f1 -d' '`
+ORGCHKSUM=`cat ${ALLFILES[@]} | ${SHASUM} -b | cut -f1 -d' '`
 
 # Open decrypted files ###############################################
-${DEFPROG} ${ALLFILES[@]}
+${DEFPROG} ${PROGARG} ${ALLFILES[@]}
 
 # Recompress opened files if modified ################################
 echo ""
-NEWCHKSUM=`cat ${ALLFILES[@]} | sha1sum -b | cut -f1 -d' '`
+NEWCHKSUM=`cat ${ALLFILES[@]} | ${SHASUM} -b | cut -f1 -d' '`
 if [ "${ORGCHKSUM}" != "${NEWCHKSUM}" ]; then
   echo "Updating ${ENCPATH}, do not stop this program"
   7z u -mhe=on -mx0 -p${KEY1} ${ENCPATH} ${ALLFILES[@]}

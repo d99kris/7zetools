@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Environment
 TMPDIR=$(mktemp -d)
@@ -16,15 +16,15 @@ EOF
 
 # Test
 ORGPWD="$(pwd)"
-./7zpass --unsafe secret            &>> ${TMPDIR}/test.txt
-cd ${TMPDIR}                        &>> ${TMPDIR}/test.txt
+./7zpass --unsafe secret            >> ${TMPDIR}/test.txt 2>&1
+cd ${TMPDIR}                        >> ${TMPDIR}/test.txt 2>&1
 echo "Test Message" > plain.txt
 ${ORGPWD}/7zenc plain.txt           > /dev/null 2>> ${TMPDIR}/test.txt
-rm plain.txt                        &>> ${TMPDIR}/test.txt
+rm plain.txt                        >> ${TMPDIR}/test.txt 2>&1
 ${ORGPWD}/7zopen cat ./plain.7z     > out.txt 2>> ${TMPDIR}/test.txt
-tail -5 out.txt                     &>> ${TMPDIR}/test.txt
+tail -5 out.txt                     >> ${TMPDIR}/test.txt 2>&1
 cd -                                > /dev/null
-./7zpass --unsafe                   &>> ${TMPDIR}/test.txt
+./7zpass --unsafe                   >> ${TMPDIR}/test.txt 2>&1
 
 # Compare
 diff ${TMPDIR}/ref.txt ${TMPDIR}/test.txt

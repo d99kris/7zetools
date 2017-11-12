@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 7zfind
 #
@@ -40,9 +40,17 @@ if [ "${?}" != "0" ]; then
   echo "Required tool 7z not found."
   exit 1
 fi
+TMPDIR="/dev/shm"
+if [[ ! -d "${TMPDIR}" ]]; then
+  if [[ "$(uname)" == "Darwin" ]]; then
+    TMPDIR="/Volumes/7zetools"
+  else
+    echo "Required directory ${TMPDIR} not found, exiting."
+    exit 1
+  fi
+fi
 
 # Globals ############################################################
-TMPDIR="/dev/shm"
 USERTMPDIR="${TMPDIR}/7z-`whoami`"
 USERPASSFILE="${USERTMPDIR}/password"
 
@@ -109,7 +117,7 @@ if [ "${KEY1}" == "" ]; then
 fi
 
 # Search specified file ##############################################
-find ${ARCHPATH} -name *.7z | \
+find ${ARCHPATH} -name "*.7z" | \
 while read ARCH; do
   7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR}
 done
@@ -121,7 +129,7 @@ if [[ "${3}" != "" ]] && [[ -d "${3}" ]]; then
   read -p "Proceed to extract above files to ${DSTDIR} (y/n)? "
   echo ""
   if [ "$REPLY" = "y"  ] ; then
-    find ${ARCHPATH} -name *.7z | \
+    find ${ARCHPATH} -name "*.7z" | \
     while read ARCH; do
       7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR} | \
       while read FILE; do
