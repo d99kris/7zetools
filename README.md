@@ -1,47 +1,61 @@
 7zetools
 ========
 
-| **Linux** |
+| **Linux + Mac** |
 |-----------|
 | [![Build status](https://travis-ci.org/d99kris/7zetools.svg?branch=master)](https://travis-ci.org/d99kris/7zetools) |
 
-7zetools - 7-Zip Encryption Tools - is a set of Linux shell scripts to 
+7zetools - 7-Zip Encryption Tools - is a set of shell scripts for Linux and macOS, that 
 facilitate single file (or directory) encryption using 7-Zip AES-256.
 
 Supported Platforms
 ===================
-7zetools should work on most Linux systems where its dependencies are met; 
-7z and realpath.
+7zetools is primarily developed and tested on Linux, but basic functionality should work in
+macOS / OS X as well. Current version has been tested on:
+- OS X El Capitan 10.11
+- Ubuntu 16.04 LTS
 
-It has been tested on:
-- Ubuntu 14.04, Ubuntu 16.04
-- openSUSE 13.2
+Linux / Ubuntu
+==============
 
-Installation
-============
-
-Dependencies
-------------
-
-Ubuntu
+**Dependencies**
 
     sudo apt-get install p7zip-full realpath
 
-openSUSE
+**Source**
 
-    sudo zypper install p7zip coreutils
+    git clone https://github.com/d99kris/7zetools && cd 7zetools
 
-Configure and Build
--------------------
-    mkdir -p build && cd build && cmake .. && make -s
+**Build**
 
-Optionally Install
-------------------
-    sudo make install
+    cmake .. && make -s
+
+**Install**
+
+    sudo make -s install
+
+macOS
+=====
+
+**Dependencies**
+
+    brew install p7zip bash
+
+**Source**
+
+    git clone https://github.com/d99kris/7zetools && cd 7zetools
+
+**Build**
+
+    cmake .. && make -s
+
+**Install**
+
+    make -s install
 
 Usage
 =====
-7zetools contains five tools described individually below. 
+7zetools contains six tools described individually below. 
 
 7zpass
 ------
