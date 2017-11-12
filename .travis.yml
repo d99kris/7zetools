@@ -1,17 +1,18 @@
 language:
   - c
 
-sudo:
-  - required
-
 os:
   - linux
+  - osx
+
+addons:
+  apt:
+    packages:
+      - p7zip-full
+      - realpath
 
 install:
-  - if [ $TRAVIS_OS_NAME = linux ]; then
-      sudo apt update;
-      sudo apt -y install p7zip-full realpath;
-    fi
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew bundle; fi
 
 script:
   - mkdir -p build
