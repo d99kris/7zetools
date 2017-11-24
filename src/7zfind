@@ -121,7 +121,7 @@ fi
 if [[ "${4}" == "" ]]; then
   find ${ARCHPATH} -name "*.7z" | \
   while read ARCH; do
-    7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${STR}
+    7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i "${STR}"
   done
 fi
 
@@ -146,7 +146,7 @@ if [[ "${3}" != "" ]] && [[ -d "${3}" ]]; then
         if [[ "${MAXCNT}" -gt "0" ]] && [[ "${CNT}" -ge "${MAXCNT}" ]]; then
           exit 0
         fi
-      done < <(7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${STR})
+      done < <(7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i "${STR}")
     done < <(find ${ARCHPATH} -name "*.7z")
   fi
 fi
