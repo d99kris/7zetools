@@ -62,14 +62,15 @@ showusage()
   echo "are extracted if a destination path is specified."
   echo ""
   echo "Usage: ${PROGNAME} OPTION"
-  echo "   or: ${PROGNAME} PATH SEARCHSTRING [DESTPATH]"
+  echo "   or: ${PROGNAME} PATH SEARCHSTRING [DESTPATH] [COUNT]"
   echo ""
   echo "Options:"
   echo "   --help        display this help and exit"
   echo "   --version     output version information and exit"
   echo "   PATH          directory with 7z archives to search"
   echo "   SEARCHSTRING  search string (case insensitive)"
-  echo "   DESTPATH      destination path for extracted filed"
+  echo "   DESTPATH      destination path for extracted files"
+  echo "   COUNT         max number of files to extract"
   echo ""
   echo "Examples:"
   echo "   ${PROGNAME} ~/archives diary"
@@ -104,7 +105,7 @@ elif [[ "${#}" < "2" ]] ; then
   exit 1
 else
   ARCHPATH="${1}"
-  SEARCHSTR="${2}"
+  STR="${2}"
 fi
 
 # Password checking ##################################################
@@ -117,25 +118,36 @@ if [ "${KEY1}" == "" ]; then
 fi
 
 # Search specified file ##############################################
-find ${ARCHPATH} -name "*.7z" | \
-while read ARCH; do
-  7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR}
-done
+if [[ "${4}" == "" ]]; then
+  find ${ARCHPATH} -name "*.7z" | \
+  while read ARCH; do
+    7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${STR}
+  done
+fi
 
 # Extract specified file #############################################
 if [[ "${3}" != "" ]] && [[ -d "${3}" ]]; then
   DSTDIR="${3}"
-  echo ""
-  read -p "Proceed to extract above files to ${DSTDIR} (y/n)? "
-  echo ""
-  if [ "$REPLY" = "y"  ] ; then
-    find ${ARCHPATH} -name "*.7z" | \
+  CNT=0
+  DONE=0
+  if [[ "${4}" == "" ]]; then
+    echo ""
+    read -p "Proceed to extract above files to ${DSTDIR} (y/n)? "
+    echo ""
+  else
+    REPLY="y"
+    MAXCNT="${4}"      
+  fi
+  if [ "${REPLY}" = "y"  ] ; then
     while read ARCH; do
-      7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${SEARCHSTR} | \
       while read FILE; do
-        7z e -p${KEY1} -o"${DSTDIR}" "${ARCH}" "${FILE}"
-      done
-    done
+        7z e -y -p${KEY1} -o"${DSTDIR}" "${ARCH}" "${FILE}"
+        let CNT=${CNT}+1
+        if [[ "${MAXCNT}" -gt "0" ]] && [[ "${CNT}" -ge "${MAXCNT}" ]]; then
+          exit 0
+        fi
+      done < <(7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i ${STR})
+    done < <(find ${ARCHPATH} -name "*.7z")
   fi
 fi
 

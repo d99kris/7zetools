@@ -95,11 +95,12 @@ Usage:
 ------
 7zfind searches 7z archives in the specified directory, for filenames
 containing the search string. Optionally the matching files are
-extracted if a destination path is specified.
+extracted if a destination path is specified, opionally limited to max
+number of files.
 
 Usage:
 
-    7zfind <path> <searchstring> [destdir]
+    7zfind <path> <searchstring> [destdir] [maxcnt]
 
 7zdec
 -----
