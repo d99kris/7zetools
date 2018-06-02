@@ -28,7 +28,7 @@ Linux / Ubuntu
 
 **Build**
 
-    cmake .. && make -s
+    mkdir -p build && cd build && cmake .. && make -s
 
 **Install**
 
@@ -47,7 +47,7 @@ macOS
 
 **Build**
 
-    cmake .. && make -s
+    mkdir -p build && cd build && cmake .. && make -s
 
 **Install**
 
