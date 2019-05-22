@@ -179,7 +179,7 @@ if [ "${KEY1}" == "" ]; then
 fi
 
 # Determine which temporary storage to use ###########################
-ENCSIZE="`BLOCKSIZE=1024 ls -s ${ENCPATH} | cut -d' ' -f1`"
+ENCSIZE="`BLOCKSIZE=1024 ls -s ${ENCPATH} | sed -e 's/^[[:space:]]*//' | cut -d' ' -f1`"
 TMPSPACE="`df -k ${TMPDIR} | awk '/[0-9]%/{print $(NF-2)}'`"
 if [ "${ENCSIZE}" -lt "${TMPSPACE}" ]; then
   echo "Using ${TMPDIR} for temporary storage"
