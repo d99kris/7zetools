@@ -30,7 +30,7 @@
 # Package details ####################################################
 URL="https://github.com/d99kris/7zetools"
 PKGNAME="7zetools"
-VERSION="1.0"
+VERSION="1.01"
 PROGNAME="7zdec"
 AUTHOR="Kristofer Berggren"
 
