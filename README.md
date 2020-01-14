@@ -3,7 +3,7 @@
 
 | **Linux + Mac** |
 |-----------|
-| [![Build status](https://travis-ci.org/d99kris/7zetools.svg?branch=master)](https://travis-ci.org/d99kris/7zetools) |
+| [![Build status](https://travis-ci.com/d99kris/7zetools.svg?branch=master)](https://travis-ci.com/d99kris/7zetools) |
 
 7zetools - 7-Zip Encryption Tools - is a set of shell scripts for Linux and macOS, that 
 facilitate single file (or directory) encryption using 7-Zip AES-256.
