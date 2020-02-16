@@ -102,6 +102,14 @@ Usage:
 
     7zfind <path> <searchstring> [destdir] [maxcnt]
 
+7zlist
+------
+7zlist lists the content of specified 7z archives.
+
+Usage:
+
+    7zlist <path> [path ..]
+
 7zdec
 -----
 7zdec decrypts specified .7z archive, using the encryption key set up using

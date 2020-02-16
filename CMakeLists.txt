@@ -1,6 +1,6 @@
 # Project
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(7zetools VERSION 1.0)
+project(7zetools VERSION 1.11)
 
 # Utilities
 configure_file(src/7zcd ${CMAKE_CURRENT_BINARY_DIR}/7zcd COPYONLY)
@@ -15,6 +15,9 @@ install(PROGRAMS src/7zenc DESTINATION bin)
 configure_file(src/7zfind ${CMAKE_CURRENT_BINARY_DIR}/7zfind COPYONLY)
 install(PROGRAMS src/7zfind DESTINATION bin)
 
+configure_file(src/7zlist ${CMAKE_CURRENT_BINARY_DIR}/7zlist COPYONLY)
+install(PROGRAMS src/7zlist DESTINATION bin)
+
 configure_file(src/7zopen ${CMAKE_CURRENT_BINARY_DIR}/7zopen COPYONLY)
 install(PROGRAMS src/7zopen DESTINATION bin)
 
@@ -26,6 +29,7 @@ install(FILES src/7zcd.1 DESTINATION share/man/man1)
 install(FILES src/7zdec.1 DESTINATION share/man/man1)
 install(FILES src/7zenc.1 DESTINATION share/man/man1)
 install(FILES src/7zfind.1 DESTINATION share/man/man1)
+install(FILES src/7zlist.1 DESTINATION share/man/man1)
 install(FILES src/7zopen.1 DESTINATION share/man/man1)
 install(FILES src/7zpass.1 DESTINATION share/man/man1)
 

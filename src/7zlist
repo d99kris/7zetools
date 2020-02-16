@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# 7zfind
+# 7zlist
 #
-# Copyright (c) 2017, Kristofer Berggren
+# Copyright (c) 2020, Kristofer Berggren
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 URL="https://github.com/d99kris/7zetools"
 PKGNAME="7zetools"
 VERSION="1.11"
-PROGNAME="7zfind"
+PROGNAME="7zlist"
 AUTHOR="Kristofer Berggren"
 
 # Pre-requisites checking ############################################
@@ -57,25 +57,19 @@ USERPASSFILE="${USERTMPDIR}/password"
 # Application info ###################################################
 showusage()
 {
-  echo "${PROGNAME} searches 7z archives in the specified directory, for"
-  echo "filenames containing the search string. Optionally the matching files"
-  echo "are extracted if a destination path is specified."
+  echo "${PROGNAME} lists the content of specified 7z archives."
   echo ""
-  echo "Usage: ${PROGNAME} OPTION"
-  echo "   or: ${PROGNAME} PATH SEARCHSTRING [DESTPATH] [COUNT]"
+  echo "Usage: ${PROGNAME} PATH [PATH ..]"
+  echo "   or: ${PROGNAME} OPTION"
   echo ""
   echo "Options:"
   echo "   --help        display this help and exit"
   echo "   --version     output version information and exit"
-  echo "   PATH          directory with 7z archives to search"
-  echo "   SEARCHSTRING  search string (case insensitive)"
-  echo "   DESTPATH      destination path for extracted files"
-  echo "   COUNT         max number of files to extract"
+  echo "   PATH          path to 7z archives to list"
   echo ""
   echo "Examples:"
-  echo "   ${PROGNAME} ~/archives diary"
-  echo "                 lists all 7z archive content with filenames"
-  echo "                 containing the string \"diary\"."
+  echo "   ${PROGNAME} test.7z"
+  echo "                 lists all 7z archive content of test.7z"
   echo ""
   echo "Report bugs at ${URL}"
   echo ""
@@ -85,7 +79,7 @@ showversion()
 {
   echo "${PROGNAME} v${VERSION}"
   echo ""
-  echo "Copyright (C) 2017 ${AUTHOR}"
+  echo "Copyright (C) 2020 ${AUTHOR}"
   echo ""
   echo "${PROGNAME} is part of 7zetools and distributed"
   echo "under BSD 3-Clause license."
@@ -100,12 +94,9 @@ if [ "${1}" == "--help" ] ; then
 elif [ "${1}" == "--version" ] ; then
   showversion
   exit 0
-elif [[ "${#}" < "2" ]] ; then
+elif [[ "${#}" < "1" ]] ; then
   showusage
   exit 1
-else
-  ARCHPATH="${1}"
-  STR="${2}"
 fi
 
 # Password checking ##################################################
@@ -117,39 +108,12 @@ if [ "${KEY1}" == "" ]; then
   exit 1
 fi
 
-# Search specified file ##############################################
-if [[ "${4}" == "" ]]; then
-  find ${ARCHPATH} -name "*.7z" | \
-  while read ARCH; do
-    7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i "${STR}"
-  done
-fi
-
-# Extract specified file #############################################
-if [[ "${3}" != "" ]] && [[ -d "${3}" ]]; then
-  DSTDIR="${3}"
-  CNT=0
-  DONE=0
-  if [[ "${4}" == "" ]]; then
-    echo ""
-    read -p "Proceed to extract above files to ${DSTDIR} (y/n)? "
-    echo ""
-  else
-    REPLY="y"
-    MAXCNT="${4}"      
-  fi
-  if [ "${REPLY}" = "y"  ] ; then
-    while read ARCH; do
-      while read FILE; do
-        7z e -y -p${KEY1} -o"${DSTDIR}" "${ARCH}" "${FILE}"
-        let CNT=${CNT}+1
-        if [[ "${MAXCNT}" -gt "0" ]] && [[ "${CNT}" -ge "${MAXCNT}" ]]; then
-          exit 0
-        fi
-      done < <(7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54- | grep -i "${STR}")
-    done < <(find ${ARCHPATH} -name "*.7z")
-  fi
-fi
+# List specified file ################################################
+for ARCH in "$@"
+do
+  echo "${ARCH}:"
+  7z l -p${KEY1} ${ARCH} | grep " $(basename -s .7z ${ARCH})/" | cut -c54-
+done
 
 # Exit ###############################################################
 exit 0
