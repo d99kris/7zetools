@@ -1,6 +1,6 @@
 # Project
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(7zetools VERSION 1.11)
+project(7zetools VERSION 1.12)
 
 # Utilities
 configure_file(src/7zcd ${CMAKE_CURRENT_BINARY_DIR}/7zcd COPYONLY)

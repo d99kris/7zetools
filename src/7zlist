@@ -30,7 +30,7 @@
 # Package details ####################################################
 URL="https://github.com/d99kris/7zetools"
 PKGNAME="7zetools"
-VERSION="1.11"
+VERSION="1.12"
 PROGNAME="7zlist"
 AUTHOR="Kristofer Berggren"
 
