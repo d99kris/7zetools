@@ -10,10 +10,9 @@ facilitate single file (or directory) encryption using 7-Zip AES-256.
 
 Supported Platforms
 ===================
-7zetools is primarily developed and tested on Linux, but basic functionality should work in
-macOS / OS X as well. Current version has been tested on:
-- OS X El Capitan 10.11
-- Ubuntu 16.04 LTS
+7zetools is primarily developed and tested on Linux, but basic functionality should work in macOS / OS X as well. Current version has been tested on:
+- macOS Big Sur 11.0
+- Ubuntu 20.04 LTS
 
 Linux / Ubuntu
 ==============
