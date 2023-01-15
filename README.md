@@ -1,17 +1,16 @@
 7zetools
 ========
 
-| **Linux** | **Mac** |
-|-----------|---------|
-| [![Linux](https://github.com/d99kris/7zetools/workflows/Linux/badge.svg)](https://github.com/d99kris/7zetools/actions?query=workflow%3ALinux) | [![macOS](https://github.com/d99kris/7zetools/workflows/macOS/badge.svg)](https://github.com/d99kris/7zetools/actions?query=workflow%3AmacOS) |
+| **Linux** |
+|-----------|
+| [![Linux](https://github.com/d99kris/7zetools/workflows/Linux/badge.svg)](https://github.com/d99kris/7zetools/actions?query=workflow%3ALinux) |
 
-7zetools - 7-Zip Encryption Tools - is a set of shell scripts for Linux and macOS, that 
+7zetools - 7-Zip Encryption Tools - is a set of shell scripts for Linux, that
 facilitate single file (or directory) encryption using 7-Zip AES-256.
 
 Supported Platforms
 ===================
-7zetools is primarily developed and tested on Linux, but basic functionality should work in macOS / OS X as well. Current version has been tested on:
-- macOS Big Sur 11.0
+7zetools is primarily developed and tested on Linux. Current version has been tested on:
 - Ubuntu 20.04 LTS
 
 Linux / Ubuntu
@@ -32,25 +31,6 @@ Linux / Ubuntu
 **Install**
 
     sudo make -s install
-
-macOS
-=====
-
-**Dependencies**
-
-    brew install p7zip bash
-
-**Source**
-
-    git clone https://github.com/d99kris/7zetools && cd 7zetools
-
-**Build**
-
-    mkdir -p build && cd build && cmake .. && make -s
-
-**Install**
-
-    make -s install
 
 Usage
 =====
